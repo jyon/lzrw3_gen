@@ -4,6 +4,7 @@
 
 /*#include <linux/kernel.h>*/
 
+
 //#include "blueftl_util.h"
 #include "blueftl_lzrw3.h"
 
@@ -14,7 +15,8 @@ void blueftl_lzrw3_decompress(UBYTE* input, UWORD input_size, UBYTE *output, UBY
 	UBYTE* SCAN = input;
 	UBYTE* DEST = output;
 
-	UBYTE* SCAN_POST = SCAN + input_size;
+
+	/*UBYTE* SCAN_POST = SCAN + input_size;*/
 	UBYTE* SCAN_MAX16 = SCAN + input_size - (MAX_CMP_GROUP - 2);
 	UBYTE* DEST_POST = DEST + C_SIZE;
 
@@ -50,7 +52,6 @@ void blueftl_lzrw3_decompress(UBYTE* input, UWORD input_size, UBYTE *output, UBY
 				p_scan = *p_hash;
 				lmt &= 0xF;
 
-
 				*(DEST++) = *(p_scan++); //if(DEST>DEST_POST) return;
 				*(DEST++) = *(p_scan++); //if(DEST>DEST_POST) return;
 				*(DEST++) = *(p_scan++); //if(DEST>DEST_POST) return;
@@ -74,6 +75,7 @@ void blueftl_lzrw3_decompress(UBYTE* input, UWORD input_size, UBYTE *output, UBY
 			}
 			else
 			{
+
 				*(DEST++) = *(SCAN++); //if(DEST>DEST_POST) return;
 				
 				if(++literals == 3)
@@ -110,6 +112,7 @@ UWORD blueftl_lzrw3_compress(UBYTE* input, UWORD input_size, UBYTE* output, UBYT
 	UBYTE** l_buf2 = 0;		//point the hash table entry to the 2nd youngest literal
 	
 	//perf_inc_compr ();
+
 
 	//write control bits of first group
 	p_control = DEST;
@@ -304,4 +307,3 @@ void main()
 	printf("success\n");
 
 }
-
