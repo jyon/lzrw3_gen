@@ -434,7 +434,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 		write_rest -= group.copy_size;
 		comp_rest -= group.comp;
-
+/*
 		for(j = 0; j < HASH_TABLE_LENGTH; j++) {
 			if(p_copy[j] != NULL) {
 				printf("[%d]: %d (%p)\n", j, *(p_copy[j]), p_copy[j]);
@@ -442,6 +442,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 				break;
 			}
 		}
+*/
 		
 
 //		printf("write_rest = %5d. written = %5d. item_num = %d. \n", write_rest, (UWORD) DEST - (UWORD) output, item_num(p_copy));
@@ -458,6 +459,8 @@ void init_hashTable(UBYTE** hashTable)
 	}
 }
 
+/* test code
+ 
 void main(int argc, char *argv[])
 {
 	UBYTE a[100000];
@@ -484,4 +487,4 @@ void main(int argc, char *argv[])
 	printf("%d / %d = %f\n", 100000 - 100000* (100 - comp) / 100, 100000, (double) (100000 - 100000 * (100 - comp) / 100) / 100000);
 	printf("%d / %d = %f\n", (100000 - size), 100000, (double) (100000 - size) / 100000);
 }
-
+*/
