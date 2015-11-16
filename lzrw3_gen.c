@@ -243,6 +243,7 @@ void insert(UBYTE *array[], UBYTE *newitem)
 	{
 		if(array[i] == NULL) {
 			array[i] = newitem;
+			return;
 		} else if(array[i] == newitem) {
 			return;
 		} 
@@ -279,6 +280,11 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 	srand(time(NULL));
 	init_hashTable(hashTable);
+	
+
+	int literal_cnt = 0;
+	int copy_cnt = 0;
+
 
 	while(DEST != DEST_POST)
 	{
@@ -289,7 +295,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		UWORD index;
 		UBYTE** p_hash;
 		UBYTE literal_size;
-		UBYTE* copy_ptr;
+		UBYTE* copy_ptr = NULL;
 		
 		iter++;	
 		comp_rest += 2;
@@ -317,13 +323,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		literal_size = group.literal_size;
 
 		if (group.literal_size < ITEMS_PER_GROUP) {
-			for(j = HASH_TABLE_LENGTH - 1; j >= 0; j--)
-			{
-				if(p_copy[j] != NULL && p_copy[j] < DEST - group.item_size[literal_size]) {
-					copy_ptr = p_copy[j];
-					break;
-				}
-			}
+			copy_ptr = get_item(p_copy, DEST - group.item_size[literal_size]);
 			DEST[literal_size] = copy_ptr[0];	
 			DEST[literal_size + 1] = copy_ptr[1];
 		}
@@ -362,14 +362,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 			if(l_buf2 != 0) {
 				*l_buf2 = DEST - 2;
-				for(j = 0; j < HASH_TABLE_LENGTH; j++)
-				{
-					if(p_copy[j] == NULL) {
-						p_copy[j] = *l_buf2;
-					} else if(p_copy[j] == *l_buf2) {
-						break;
-					} 
-				}
+				insert(p_copy, *l_buf2);
 			}
 		
 			DEST++;
@@ -391,12 +384,8 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		for(i = group.literal_size; i < ITEMS_PER_GROUP; i++)
 		{
 			p_lookup = DEST;
-			for(j = HASH_TABLE_LENGTH - 1; j >= 0; j--)
-			{
-				if(p_copy[j] != NULL && p_copy[j] < DEST - group.item_size[i]) {
-					copy_ptr = p_copy[j];
-					break;
-				}
+			if(copy_ptr == NULL) {
+				copy_ptr = get_item(p_copy, DEST - group.item_size[i]);
 			}
 
 			for(j = 0; j < group.item_size[i]; j++) {
@@ -405,26 +394,15 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 			if(l_buf1 != 0) {
 				*l_buf1 = p_lookup - 1;
-				for(j = 0; j < HASH_TABLE_LENGTH; j++)
-				{
-					if(p_copy[j] == NULL) {
-						p_copy[j] = *l_buf1;
-					} else if(p_copy[j] == *l_buf1) {
-						break;
-					} 
-				}
+
+				insert(p_copy, *l_buf1);
+				copy_cnt++;
 				l_buf1 = 0;
 
 				if(l_buf2 != 0) {
 					*l_buf2 = p_lookup - 2;
-					for(j = 0; j < HASH_TABLE_LENGTH; j++)
-					{
-						if(p_copy[j] == NULL) {
-							p_copy[j] = *l_buf2;
-						} else if(p_copy[j] == *l_buf2) {
-							break;
-						} 
-					}
+					insert(p_copy, *l_buf2);
+					copy_cnt++;
 					l_buf2 = 0;
 				}
 			}
@@ -434,7 +412,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 		write_rest -= group.copy_size;
 		comp_rest -= group.comp;
-/*
+		/*
 		for(j = 0; j < HASH_TABLE_LENGTH; j++) {
 			if(p_copy[j] != NULL) {
 				printf("[%d]: %d (%p)\n", j, *(p_copy[j]), p_copy[j]);
@@ -442,7 +420,8 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 				break;
 			}
 		}
-*/
+		printf("literal_cnt = %d copy_cnt = %d\n", literal_cnt, copy_cnt);
+		*/
 		
 
 //		printf("write_rest = %5d. written = %5d. item_num = %d. \n", write_rest, (UWORD) DEST - (UWORD) output, item_num(p_copy));
@@ -459,7 +438,6 @@ void init_hashTable(UBYTE** hashTable)
 	}
 }
 
-/* test code
  
 void main(int argc, char *argv[])
 {
@@ -478,13 +456,20 @@ void main(int argc, char *argv[])
 	size = blueftl_lzrw3_compress(a, 100000, b, hashTable);
 
 
-	for(i = 0; i < 200; i++) {
-		for(j = 0; j < 50; j++) {
-			printf("%3d ", a[50 * i + j]);
+	for(i = 0; i < 400; i++) {
+		for(j = 0; j < 25; j++) {
+			printf("%3d ", a[25 * i + j]);
 		}
 		printf("\n");
 	}
+	printf("\n");
+	for(i = 0; i < 400; i++) {
+		for(j = 0; j < 25; j++) {
+			printf("%3d ", b[25 * i + j]);
+		}
+		printf("\n");
+	}
+	
 	printf("%d / %d = %f\n", 100000 - 100000* (100 - comp) / 100, 100000, (double) (100000 - 100000 * (100 - comp) / 100) / 100000);
 	printf("%d / %d = %f\n", (100000 - size), 100000, (double) (100000 - size) / 100000);
 }
-*/
