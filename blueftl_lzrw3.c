@@ -16,7 +16,7 @@ void blueftl_lzrw3_decompress(UBYTE* input, UWORD input_size, UBYTE *output, UBY
 	UBYTE* DEST = output;
 
 
-	/*UBYTE* SCAN_POST = SCAN + input_size;*/
+	UBYTE* SCAN_POST = SCAN + input_size;
 	UBYTE* SCAN_MAX16 = SCAN + input_size - (MAX_CMP_GROUP - 2);
 	UBYTE* DEST_POST = DEST + C_SIZE;
 
@@ -126,10 +126,10 @@ UWORD blueftl_lzrw3_compress(UBYTE* input, UWORD input_size, UBYTE* output, UBYT
 		UWORD index;
 		UBYTE **p_hash;
 
-		if(DEST > DEST_POST)
+/*		if(DEST > DEST_POST)
 		{
 			goto overrun;
-		}
+		} */
 
 		unroll = 16;
 		if(SCAN > SCAN_MAX16)
@@ -216,7 +216,7 @@ UWORD blueftl_lzrw3_compress(UBYTE* input, UWORD input_size, UBYTE* output, UBYT
 
 	if(p_control == DEST)
 		DEST -= 2;
-	return (UWORD) DEST - (UWORD) output;
+	return (UWORD) DEST - (UWORD) output + 1;
 
 	overrun:
 	/*printk("ERROR:overruned\n");*/
@@ -245,61 +245,41 @@ UWORD get_size(UBYTE* buffer, int max) {
 
 void main()
 {
-	UBYTE input[10000];
-	UBYTE output[10000];
-	UBYTE d[10000];
+	UBYTE input[100000];
+	UBYTE output[200000];
+	UBYTE d[100000];
 	UWORD size;
-
+	UWORD size2;
+	
 	printf("%d\n", sizeof(UWORD));
 	int i, j;
-	for (i = 0; i < 10000; i++)
+	for (i = 0; i < 100000; i++)
 	{
-		input[i] = 234;
+		input[i] = rand() % 256;
 		output[i] = 0;
 		d[i] = 0;
 	}
 
-	/*
-	blueftl_lzrw3_compress(input, 10000, output, hashTable);
-	size = get_size(output, 10000);
-*/
-	/*
-	for(i = 0; i < 100; i++)
-	{
-		for(j = 0; j < 100; j++)
-		{
-			printf("%i ", output[100*i + j]);
-		}
-		printf("\n");
-	}
-	*/
-/*	
-	FILE *pFile;
-	pFile = fopen("output", "wb");
-	fwrite(output, 1, size, pFile);
-	fclose(pFile);
-	*/
-	FILE *pFile;
-	pFile = fopen("output", "rb");
-	fseek(pFile, 0, SEEK_END);
-	size = ftell(pFile);
-	printf("%d\n", size);
-	rewind(pFile);
-	fread(output, 1, size, pFile);
-	blueftl_lzrw3_decompress(output, size, d, hashTable);
-	printf("size(output)=%d\n", get_size(output, 10000));
-	for(i = 0; i < 100; i++)
-	{
-		for(j = 0; j < 100; j++)
-		{
-			printf("%i ", output[100*i + j]);
-		}
-		printf("\n");
-	}
 
-	for(i = 0; i < 10000; i++)
+	size2 = blueftl_lzrw3_compress(input, 100000, output, hashTable);
+
+	/*
+	for(i = 0; i < 100; i++)
 	{
-		if(d[i] != 234) {
+		for(j = 0; j < 100; j++)
+		{
+			printf("%i ", output[100*i + j]);
+		}
+		printf("\n");
+	}
+	*/
+	
+	blueftl_lzrw3_decompress(output, size2, d, hashTable);
+	printf("size2=%d\n", size2);
+
+	for(i = 0; i < 100000; i++)
+	{
+		if(d[i] != input[i]) {
 			printf("fail\n");
 			return;
 		}

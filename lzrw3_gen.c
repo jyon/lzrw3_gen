@@ -126,7 +126,7 @@ UWORD blueftl_lzrw3_compress(UBYTE* input, UWORD input_size, UBYTE* output, UBYT
 
 	if(p_control == DEST)
 		DEST -= 2;
-	return (UWORD) DEST - (UWORD) output;
+	return (UWORD) DEST - (UWORD) output + 1;
 
 	overrun:
 	/*printk("ERROR:overruned\n");*/
@@ -304,8 +304,9 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		if (group.literal_size < ITEMS_PER_GROUP) {
 //			copy_ptr = get_item(p_copy, DEST - group.item_size[literal_size]);
 //			printf("DEST=%p ", DEST);
-			copy_ptr = list_get_item(&copy_list, DEST - group.item_size[literal_size] - 1);
-			DEST[literal_size] = copy_ptr[0];	
+			copy_ptr = list_get_item(&copy_list, copy_list.head->next->ptr);
+			list_remove(&copy_list, copy_ptr);
+			DEST[literal_size] = copy_ptr[0];
 			DEST[literal_size + 1] = copy_ptr[1];
 			
 		}
@@ -370,7 +371,8 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 //			printf("copy_ptr=%p\n", copy_ptr);
 			p_lookup = DEST;
 			if(i!=group.literal_size || i==group.literal_size && copy_ptr == NULL) {
-				copy_ptr = list_get_item(&copy_list, DEST - group.item_size[i] - 1);
+				copy_ptr = list_get_item(&copy_list, copy_list.head->next->ptr);
+				list_remove(&copy_list, copy_ptr);
 			}
 				
 
@@ -435,7 +437,7 @@ void init_hashTable(UBYTE** hashTable)
 void main(int argc, char *argv[])
 {
 	UBYTE a[100000];
-	UBYTE b[100000];
+	UBYTE b[200000];
 	UWORD size;
 	int comp;
 	int i = 0, j;

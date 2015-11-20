@@ -157,12 +157,12 @@ void list_remove(list* lp, UBYTE* item) {
 	(lp->cnt)--;
 }
 
-UBYTE* list_get_item(list* lp, UBYTE* max) {
-	node* curr = lp->tail;
+UBYTE* list_get_item(list* lp, UBYTE* min) {
+	node* curr = lp->head->next;
 	if(lp->cnt==1) {
 		return NULL;
 	}
-	for(; curr->ptr > max; curr = curr->prev);
+	for(; curr->ptr < min; curr = curr->next);
 	return curr->ptr;
 }
 
