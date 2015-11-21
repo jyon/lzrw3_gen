@@ -345,7 +345,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 			if(l_buf2 != 0) {
 				list_remove(&copy_list, *l_buf2);
-				*l_buf2 = DEST;
+				*l_buf2 = DEST - 2;
 //				insert(p_copy, *l_buf2);
 				list_insert(&copy_list, *l_buf2);
 			}
