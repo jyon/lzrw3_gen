@@ -202,42 +202,6 @@ GROUP mk_group(UWORD wr, UWORD cr, int literal_min)
 	
 	return group;
 }
-
-UBYTE *get_item(UBYTE *array[], UBYTE *max)
-{
-	int i;
-	for(i = HASH_TABLE_LENGTH - 1; i >= 0; i--)
-	{
-		if(array[i] != NULL && array[i] < max) {
-			return array[i];
-		}
-	}
-	return NULL;
-}
-
-void insert(UBYTE *array[], UBYTE *newitem)
-{
-	int i;
-	for(i = 0; i < HASH_TABLE_LENGTH; i++)
-	{
-		if(array[i] == NULL) {
-			array[i] = newitem;
-			return;
-		} else if(array[i] == newitem) {
-			return;
-		} 
-	}
-}
-
-int item_num(UBYTE *array[])
-{
-	int i;
-	for(i = 0; i < HASH_TABLE_LENGTH; i++) {
-		if (array[i] == NULL)
-			return i;
-	}
-}
-
 void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTable) 
 {
 	UWORD comp_size = size * (100 - compressibility) / 100;
@@ -301,8 +265,6 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		literal_size = group.literal_size;
 
 		if (group.literal_size < ITEMS_PER_GROUP) {
-//			copy_ptr = get_item(p_copy, DEST - group.item_size[literal_size]);
-//			printf("DEST=%p ", DEST);
 			copy_ptr = list_get_item(&copy_list, copy_list.head->next->ptr);
 			list_remove(&copy_list, copy_ptr);
 			DEST[literal_size] = copy_ptr[0];
@@ -345,7 +307,6 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			if(l_buf2 != 0) {
 				list_remove(&copy_list, *l_buf2);
 				*l_buf2 = DEST - 2;
-//				insert(p_copy, *l_buf2);
 				list_insert(&copy_list, *l_buf2);
 			}
 		
@@ -369,9 +330,6 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		{
 //			printf("copy_ptr=%p\n", copy_ptr);
 			p_lookup = DEST;
-			
-			
-
 
 			if(i > group.literal_size || i==group.literal_size && copy_ptr == NULL) {
 				copy_ptr = list_get_item(&copy_list, copy_list.head->next->ptr);
@@ -382,12 +340,13 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			for(j = 0; j < group.item_size[i]; j++) {
 				*(DEST++) = copy_ptr[j];
 			}
+			index = HASH(p_lookup);
+			p_hash = &hashTable[index];
 
 			if(l_buf1 != 0) {
 				
 				list_remove(&copy_list, *l_buf1);
 				*l_buf1 = p_lookup - 1;
-//				insert(p_copy, *l_buf1);
 				list_insert(&copy_list, *l_buf1);
 				
 				l_buf1 = 0;
@@ -395,33 +354,19 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 				if(l_buf2 != 0) {
 					list_remove(&copy_list, *l_buf2);
 					*l_buf2 = p_lookup - 2;
-					
-//					insert(p_copy, *l_buf2);
 					list_insert(&copy_list, *l_buf2);
 					l_buf2 = 0;
 				}
 			}
-			
-			list_remove(&copy_list, *p_hash);
+
+			list_remove(&copy_list, *p_hash);	
 			*p_hash = p_lookup;
 			
-//			insert(p_copy, *p_hash);
 			list_insert(&copy_list, *p_hash);
 		}
 
 		write_rest -= group.copy_size;
 		comp_rest -= group.comp;
-		/*
-		for(j = 0; j < HASH_TABLE_LENGTH; j++) {
-			if(p_copy[j] != NULL) {
-				printf("[%d]: %d (%p)\n", j, *(p_copy[j]), p_copy[j]);
-			} else {
-				break;
-			}
-		}
-		printf("literal_cnt = %d copy_cnt = %d\n", literal_cnt, copy_cnt);
-		*/
-		
 
 //		printf("write_rest = %5d. written = %5d. item_num = %d. \n", write_rest, (UWORD) DEST - (UWORD) output, item_num(p_copy));
 //		printf("----------------------------------------------------------\n\n");	

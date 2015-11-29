@@ -88,8 +88,6 @@ void list_insert(list* lp, UBYTE* newitem) {
 	node* newnode = (node *)malloc(sizeof(node));
 
 	node* curr = lp->head->next;
-/*	node* ncurr;
-	node* pcurr; */
 	
 	newnode->ptr = newitem;
 	newnode->next = NULL;
@@ -98,30 +96,6 @@ void list_insert(list* lp, UBYTE* newitem) {
 	newnode->prev = lp->tail;
 	lp->tail = newnode;
 	(lp->cnt)++;
-/*
-	for(index = 1; index < n; index++) {
-		if(curr->ptr == newitem) {
-			return;
-		} else if(curr->ptr < newitem) {
-			curr = curr->next;
-		} else {
-			break;
-		}
-	}
-	
-	if(curr==null) {
-		lp->tail->next = newnode;
-		newnode->prev = lp->tail;
-		lp->tail = newnode;
-	} else {
-		pcurr = curr->prev;
-		pcurr->next = newnode;
-		newnode->prev = pcurr;
-		newnode->next = curr;
-		curr->prev = newnode;
-		
-	}
-	*/
 	
 }
 
