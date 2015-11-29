@@ -160,6 +160,7 @@ void list_remove(list* lp, UBYTE* item) {
 UBYTE* list_get_item(list* lp, UBYTE* min) {
 	node* curr = lp->head->next;
 	if(lp->cnt==1) {
+		printf("err\n");
 		return NULL;
 	}
 	for(; curr->ptr < min; curr = curr->next);
@@ -169,7 +170,7 @@ UBYTE* list_get_item(list* lp, UBYTE* min) {
 void list_print(list* lp) {
 	node* curr = lp->head->next;
 	while(curr != NULL) {
-		printf("[%p] ", curr->ptr);
+		printf("[%p: %u] ", curr->ptr, *(curr->ptr));
 		curr = curr->next;
 	}
 	printf("\n");
