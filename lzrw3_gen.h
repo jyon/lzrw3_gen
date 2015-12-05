@@ -71,10 +71,6 @@ int compare(void *f, void *s)
 	}
 }
 
-int is_empty(list* lp) {
-	return (lp->cnt == 1);
-}
-
 void init_list(list* lp) {
 	int i;
 	for(i = 0; i < 18; i++) {
@@ -94,6 +90,7 @@ void list_insert(list* lp, UBYTE* newitem, UBYTE size) {
 	node* newnode[2];
 
 	for(i = 0; i < 2; i++) {
+		newnode[i] = (node *)malloc(sizeof(node));
 		newnode[i]->ptr = newitem;
 		newnode[i]->size = size;
 		newnode[i]->next = NULL;
@@ -104,9 +101,9 @@ void list_insert(list* lp, UBYTE* newitem, UBYTE size) {
 	lp->tail[size - 1] = newnode[0];
 	(lp->cnt[size - 1])++;
 
-	lp->tail[0]->next = newnode[0];
-	newnode[0]->prev = lp->tail[0];
-	lp->tail[0] = newnode[0];
+	lp->tail[0]->next = newnode[1];
+	newnode[1]->prev = lp->tail[0];
+	lp->tail[0] = newnode[1];
 	(lp->cnt[0])++;
 }
 
@@ -124,7 +121,7 @@ void list_remove(list* lp, UBYTE* item) {
 		
 	if(index == lp->cnt[0]) return; 
 	pcurr = curr->prev; ncurr = curr->next;
-	if(curr == lp->tail[0])  lp->tail[0] = curr-> pcurr; 
+	if(curr == lp->tail[0])  lp->tail[0] = pcurr; 
 	pcurr->next = ncurr;
 	if(ncurr!=NULL) ncurr->prev = pcurr;
 	(lp->cnt[0])--;
@@ -132,7 +129,7 @@ void list_remove(list* lp, UBYTE* item) {
 	size = curr->size;
 	curr = lp->head[size - 1]->next;
 
-	for(index = 1; index < n; index++) {
+	for(index = 1; index < lp->cnt[size - 1]; index++) {
 		if(curr->ptr == item)  break;
 		curr = curr->next;
 	}
@@ -152,9 +149,10 @@ UBYTE* list_get_item(list* lp, UBYTE* prev, UBYTE size) {
 }
 
 int copy_num(list* lp, UBYTE size) {
-	int i, r;
+	int i;
+	int r = 0;
 	for(i = size - 1; i < 18; i++) 
-		r += lp->cnt[i];
+		r += lp->cnt[i] - 1;
 	return r;
 }
 
@@ -173,19 +171,21 @@ int calc_copy_rest(list* lp, GROUP *g) {
 		}
 	}
 	copy_rest += ITEMS_PER_GROUP - g->literal_size - 1;
-	copy_rest = ((copy_rest / 16) + 1) * 16;
+	//copy_rest = ((copy_rest / 16) + 1) * 16;
 	return copy_rest;
 }
 
 void list_print(list* lp) {
-	node* curr = lp->head->next;
-	while(curr != NULL) {
-		printf("[%p: %u] ", curr->ptr, *(curr->ptr));
-		curr = curr->next;
+	int i;
+	for(i = 0; i < 18; i++) {
+		node* curr = lp->head[i]->next;
+		printf("[%d]: ", i);
+		while(curr != NULL) {
+			printf("%p(%d) -> ", curr->ptr, *(curr->ptr));
+			curr = curr->next;
+		}
+		printf("\n");
 	}
-	printf("\n");
-	printf("head = %p, tail = %p\n", lp->head->ptr, lp->tail->ptr);
 }
-
 void init_hashTable(UBYTE** hashTable);
 void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
