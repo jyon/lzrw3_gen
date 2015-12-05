@@ -38,13 +38,14 @@ typedef struct _group {
 typedef struct _node {
 	struct _node *next;
 	struct _node *prev;
+	UBYTE size;
 	UBYTE *ptr;
 } node;
 
 typedef struct _list {
-	int cnt;
-	node* head;
-	node* tail;
+	int cnt[18];
+	node* head[18];
+	node* tail[18];
 } list;
 
 int compare(void *f, void *s)
@@ -70,75 +71,110 @@ int compare(void *f, void *s)
 	}
 }
 
-void init_list(list* lp) {
-	node* dummy = (node *)malloc(sizeof(node));
-	dummy->ptr = NULL;
-	dummy->next = NULL;
-	dummy->prev = NULL;
-	
-	lp->cnt = 1;
-	lp->head = dummy;
-	lp->tail = dummy;
+int is_empty(list* lp) {
+	return (lp->cnt == 1);
 }
 
-void list_insert(list* lp, UBYTE* newitem) {
-	int n = lp->cnt;
-	int index;
-	
-	node* newnode = (node *)malloc(sizeof(node));
+void init_list(list* lp) {
+	int i;
+	for(i = 0; i < 18; i++) {
+		node* dummy = (node *)malloc(sizeof(node));
+		dummy->ptr = NULL;
+		dummy->size = 0;
+		dummy->next = NULL;
+		dummy->prev = NULL;
+		lp->cnt[i] = 1;
+		lp->head[i] = dummy;
+		lp->tail[i] = dummy;
+	}
+}
 
-	node* curr = lp->head->next;
-	
-	newnode->ptr = newitem;
-	newnode->next = NULL;
+void list_insert(list* lp, UBYTE* newitem, UBYTE size) {
+	int i;
+	node* newnode[2];
 
-	lp->tail->next = newnode;
-	newnode->prev = lp->tail;
-	lp->tail = newnode;
-	(lp->cnt)++;
-	
+	for(i = 0; i < 2; i++) {
+		newnode[i]->ptr = newitem;
+		newnode[i]->size = size;
+		newnode[i]->next = NULL;
+	}
+
+	lp->tail[size - 1]->next = newnode[0];
+	newnode[0]->prev = lp->tail[size - 1];
+	lp->tail[size - 1] = newnode[0];
+	(lp->cnt[size - 1])++;
+
+	lp->tail[0]->next = newnode[0];
+	newnode[0]->prev = lp->tail[0];
+	lp->tail[0] = newnode[0];
+	(lp->cnt[0])++;
 }
 
 void list_remove(list* lp, UBYTE* item) {
-	int n = lp->cnt;
+	int size;
 	int index;
-	node* curr = lp->head->next;
+	node* curr = lp->head[0]->next;
 	node* pcurr;
 	node* ncurr;
 	
-	for(index = 1; index < n; index++) {
-		if(curr->ptr == item) {
-			break;
-		} else {
-			curr = curr->next;
-		}
+	for(index = 1; index < lp->cnt[0]; index++) {
+		if(curr->ptr == item) break; 
+		curr = curr->next;
 	}
+		
+	if(index == lp->cnt[0]) return; 
+	pcurr = curr->prev; ncurr = curr->next;
+	if(curr == lp->tail[0])  lp->tail[0] = curr-> pcurr; 
+	pcurr->next = ncurr;
+	if(ncurr!=NULL) ncurr->prev = pcurr;
+	(lp->cnt[0])--;
 	
-	if(index==n) {
-		return;
-	}
+	size = curr->size;
+	curr = lp->head[size - 1]->next;
 
-	pcurr = curr->prev;
-	ncurr = curr->next;
-	
-	if(curr==lp->tail) {
-		lp->tail = pcurr;
+	for(index = 1; index < n; index++) {
+		if(curr->ptr == item)  break;
+		curr = curr->next;
 	}
 	
+	if(index==lp->cnt[size - 1]) return; 
+	pcurr = curr->prev; ncurr = curr->next;
+	if(curr==lp->tail[size - 1]) lp->tail[size - 1] = pcurr; 
 	pcurr->next = ncurr;
 	if(ncurr!= NULL) ncurr->prev = pcurr;
-
-	(lp->cnt)--;
+	(lp->cnt[size - 1])--;
 }
 
-UBYTE* list_get_item(list* lp, UBYTE* min) {
-	node* curr = lp->head->next;
-	if(lp->cnt==1) {
-		printf("err\n");
-		return NULL;
-	}
-	for(; curr->ptr < min; curr = curr->next);
+UBYTE* list_get_item(list* lp, UBYTE* prev, UBYTE size) {
+	node* curr = lp->head[size - 1]->next;
+	for(; curr->ptr < prev; curr = curr->next);
 	return curr->ptr;
+}
+
+int copy_num(list* lp, UBYTE size) {
+	int i, r;
+	for(i = size - 1; i < 18; i++) 
+		r += lp->cnt[i];
+	return r;
+}
+
+int can_copy(list* lp, GROUP *g) {
+	if(copy_num(lp, g->item_size[g->literal_size]) >= ITEMS_PER_GROUP - g->literal_size) return 1;
+	return 0;
+}
+
+int calc_copy_rest(list* lp, GROUP *g) {
+	int copy_rest, i;
+	copy_rest = g->item_size[g->literal_size];
+	for(i = g->literal_size; i < ITEMS_PER_GROUP; i++) {
+		if(g->item_size[i] > g->item_size[g->literal_size]) {
+			copy_rest += 1;
+			break;
+		}
+	}
+	copy_rest += ITEMS_PER_GROUP - g->literal_size - 1;
+	copy_rest = ((copy_rest / 16) + 1) * 16;
+	return copy_rest;
 }
 
 void list_print(list* lp) {
