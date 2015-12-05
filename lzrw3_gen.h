@@ -38,14 +38,13 @@ typedef struct _group {
 typedef struct _node {
 	struct _node *next;
 	struct _node *prev;
-	UBYTE size;
 	UBYTE *ptr;
 } node;
 
 typedef struct _list {
-	int cnt[18];
-	node* head[18];
-	node* tail[18];
+	int cnt;
+	node* head;
+	node* tail;
 } list;
 
 int compare(void *f, void *s)
@@ -72,120 +71,85 @@ int compare(void *f, void *s)
 }
 
 void init_list(list* lp) {
-	int i;
-	for(i = 0; i < 18; i++) {
-		node* dummy = (node *)malloc(sizeof(node));
-		dummy->ptr = NULL;
-		dummy->size = 0;
-		dummy->next = NULL;
-		dummy->prev = NULL;
-		lp->cnt[i] = 1;
-		lp->head[i] = dummy;
-		lp->tail[i] = dummy;
-	}
+	node* dummy = (node *)malloc(sizeof(node));
+	dummy->ptr = NULL;
+	dummy->next = NULL;
+	dummy->prev = NULL;
+	
+	lp->cnt = 1;
+	lp->head = dummy;
+	lp->tail = dummy;
 }
 
-void list_insert(list* lp, UBYTE* newitem, UBYTE size) {
-	int i;
-	node* newnode[2];
+void list_insert(list* lp, UBYTE* newitem) {
+	int n = lp->cnt;
+	int index;
+	
+	node* newnode = (node *)malloc(sizeof(node));
 
-	for(i = 0; i < 2; i++) {
-		newnode[i] = (node *)malloc(sizeof(node));
-		newnode[i]->ptr = newitem;
-		newnode[i]->size = size;
-		newnode[i]->next = NULL;
-	}
+	node* curr = lp->head->next;
+	
+	newnode->ptr = newitem;
+	newnode->next = NULL;
 
-	lp->tail[size - 1]->next = newnode[0];
-	newnode[0]->prev = lp->tail[size - 1];
-	lp->tail[size - 1] = newnode[0];
-	(lp->cnt[size - 1])++;
-
-	lp->tail[0]->next = newnode[1];
-	newnode[1]->prev = lp->tail[0];
-	lp->tail[0] = newnode[1];
-	(lp->cnt[0])++;
+	lp->tail->next = newnode;
+	newnode->prev = lp->tail;
+	lp->tail = newnode;
+	(lp->cnt)++;
+	
 }
 
 void list_remove(list* lp, UBYTE* item) {
-	int size;
+	int n = lp->cnt;
 	int index;
-	node* curr = lp->head[0]->next;
+	node* curr = lp->head->next;
 	node* pcurr;
 	node* ncurr;
 	
-	for(index = 1; index < lp->cnt[0]; index++) {
-		if(curr->ptr == item) break; 
-		curr = curr->next;
+	for(index = 1; index < n; index++) {
+		if(curr->ptr == item) {
+			break;
+		} else {
+			curr = curr->next;
+		}
 	}
-		
-	if(index == lp->cnt[0]) return; 
-	pcurr = curr->prev; ncurr = curr->next;
-	if(curr == lp->tail[0])  lp->tail[0] = pcurr; 
-	pcurr->next = ncurr;
-	if(ncurr!=NULL) ncurr->prev = pcurr;
-	(lp->cnt[0])--;
 	
-	size = curr->size;
-	curr = lp->head[size - 1]->next;
+	if(index==n) {
+		return;
+	}
 
-	for(index = 1; index < lp->cnt[size - 1]; index++) {
-		if(curr->ptr == item)  break;
-		curr = curr->next;
+	pcurr = curr->prev;
+	ncurr = curr->next;
+	
+	if(curr==lp->tail) {
+		lp->tail = pcurr;
 	}
 	
-	if(index==lp->cnt[size - 1]) return; 
-	pcurr = curr->prev; ncurr = curr->next;
-	if(curr==lp->tail[size - 1]) lp->tail[size - 1] = pcurr; 
 	pcurr->next = ncurr;
 	if(ncurr!= NULL) ncurr->prev = pcurr;
-	(lp->cnt[size - 1])--;
+
+	(lp->cnt)--;
 }
 
-UBYTE* list_get_item(list* lp, UBYTE* prev, UBYTE size) {
-	node* curr = lp->head[size - 1]->next;
-	for(; curr->ptr < prev; curr = curr->next);
+UBYTE* list_get_item(list* lp, UBYTE* min) {
+	node* curr = lp->head->next;
+	if(lp->cnt==1) {
+		printf("err\n");
+		return NULL;
+	}
+	for(; curr->ptr <= min; curr = curr->next);
 	return curr->ptr;
 }
 
-int copy_num(list* lp, UBYTE size) {
-	int i;
-	int r = 0;
-	for(i = size - 1; i < 18; i++) 
-		r += lp->cnt[i] - 1;
-	return r;
-}
-
-int can_copy(list* lp, GROUP *g) {
-	if(copy_num(lp, g->item_size[g->literal_size]) >= ITEMS_PER_GROUP - g->literal_size) return 1;
-	return 0;
-}
-
-int calc_copy_rest(list* lp, GROUP *g) {
-	int copy_rest, i;
-	copy_rest = g->item_size[g->literal_size];
-	for(i = g->literal_size; i < ITEMS_PER_GROUP; i++) {
-		if(g->item_size[i] > g->item_size[g->literal_size]) {
-			copy_rest += 1;
-			break;
-		}
-	}
-	copy_rest += ITEMS_PER_GROUP - g->literal_size - 1;
-	//copy_rest = ((copy_rest / 16) + 1) * 16;
-	return copy_rest;
-}
-
 void list_print(list* lp) {
-	int i;
-	for(i = 0; i < 18; i++) {
-		node* curr = lp->head[i]->next;
-		printf("[%d]: ", i);
-		while(curr != NULL) {
-			printf("%p(%d) -> ", curr->ptr, *(curr->ptr));
-			curr = curr->next;
-		}
-		printf("\n");
+	node* curr = lp->head->next;
+	while(curr != NULL) {
+		printf("[%p: %u] ", curr->ptr, *(curr->ptr));
+		curr = curr->next;
 	}
+	printf("\n");
+	printf("head = %p, tail = %p\n", lp->head->ptr, lp->tail->ptr);
 }
+
 void init_hashTable(UBYTE** hashTable);
 void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
