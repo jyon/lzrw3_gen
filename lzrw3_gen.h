@@ -46,11 +46,6 @@ typedef struct _list {
 	node* head;
 	node* tail;
 } list;
-void printp(UBYTE* p, char cmd) {
-	if(p != NULL && p != 0)
-		printf("<%c %d %03d%03d%03d>\n", (cmd=='i')? 'i' : 'r',p, *p, *(p+1), *(p+2));
-
-}
 
 int compare(void *f, void *s)
 {
@@ -87,8 +82,6 @@ void init_list(list* lp) {
 }
 
 void list_insert(list* lp, UBYTE* newitem) {
-	int n = lp->cnt;
-	int index;
 	
 	node* newnode = (node *)malloc(sizeof(node));
 
@@ -138,23 +131,59 @@ void list_remove(list* lp, UBYTE* item) {
 
 UBYTE* list_get_item(list* lp, UBYTE* min) {
 	node* curr = lp->head->next;
-	if(lp->cnt==1) {
-		printf("err\n");
+	if(curr==NULL) {
+		printf("list empty!\n");
+		fflush(stdout);
 		return NULL;
 	}
-	for(; curr->ptr <= min; curr = curr->next);
+
+	for(; curr->ptr <= min; curr = curr->next) {
+		if(curr==NULL) {
+			return NULL;
+		}
+	}
+
 	return curr->ptr;
 }
+
+void list_copy(list* src, list* dst) {
+	int cnt = src->cnt;
+	int i;
+	node* curr = src->head;
+
+	node* ptmp = NULL;
+
+	dst->cnt = cnt;
+	for(i = 0; i < cnt; i++) {
+		node* tmp = (node*) malloc(sizeof(node));
+		tmp->ptr = curr->ptr;
+		tmp->next = NULL;
+		tmp->prev = ptmp;
+		if(ptmp != NULL) {
+			ptmp->next = tmp;
+		}
+	
+		if(i==0) {
+			dst->head = tmp;
+		} else if(i==cnt - 1) {
+			dst->tail = tmp;
+		}
+
+		ptmp = tmp;
+		curr = curr->next;
+	}
+}
+
 
 void list_print(list* lp) {
 	node* curr = lp->head->next;
 	while(curr != NULL) {
-		printf("[%p: %u] ", curr->ptr, *(curr->ptr));
+		printf("%p ->", curr->ptr);
 		curr = curr->next;
 	}
 	printf("\n");
-	printf("head = %p, tail = %p\n", lp->head->ptr, lp->tail->ptr);
 }
 
+extern UBYTE* hashTable[HASH_TABLE_LENGTH];
 void init_hashTable(UBYTE** hashTable);
 void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
