@@ -348,7 +348,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 			if(i > group.literal_size || copy_ptr == NULL) {
 				copy_ptr = list_get_item(&copy_list, pcopy_ptr);
-				while(pcopy_size < 17 && *(pcopy_ptr + pcopy_size) == *copy_ptr) {
+				while(*(pcopy_ptr + pcopy_size) == *copy_ptr) {
 					copy_ptr = list_get_item(&copy_list, copy_ptr);
 				}
 				pcopy_ptr = copy_ptr;
