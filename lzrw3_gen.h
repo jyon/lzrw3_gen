@@ -48,7 +48,8 @@ typedef struct _list {
 } list;
 void printp(UBYTE* p, char cmd) {
 	if(p != NULL && p != 0)
-		printf("<%c%03d%03d%03d>\n", (cmd=='i')? 'i' : 'r', *p, *(p+1), *(p+2));
+		printf("<%c %d %03d%03d%03d>\n", (cmd=='i')? 'i' : 'r',p, *p, *(p+1), *(p+2));
+
 }
 
 int compare(void *f, void *s)

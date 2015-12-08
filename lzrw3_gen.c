@@ -254,7 +254,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			return;
 		}
 
-		printf("iter%d. literal_size=%d\n", iter, group.literal_size);
+		//printf("iter%d. literal_size=%d\n", iter, group.literal_size);
 		
 //		printf("iter%04d: group_size = %5d. %5d(literal). %5d(copy). comp = %5d. group.compressibility = %3.5f. write_rest = %5d. comp_rest = %5d. compressibility = %3.5f WRITTEN=%d\n",
 //				iter, group.copy_size + group.literal_size, group.literal_size, group.copy_size, group.comp, (double) (group.comp - 2) / (group.literal_size + group.copy_size), write_rest, comp_rest, (double) comp_rest / write_rest, 
@@ -263,7 +263,8 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 		//literal generate
 
-		#define MATCH(x) (p_lookup[(x)] == p_scan[(x)] && p_lookup[(x)+1] == p_scan[(x)+1] && p_lookup[(x)+2] == p_scan[(x)+2])
+		#define MATCH1(x) (p_lookup[(x)] == p_scan[(x)] && p_lookup[(x)+1] == p_scan[(x)+1] && p_lookup[(x)+2] == p_scan[(x)+2])
+		#define MATCH2(x) (p_lookup[(x)] == pcopy_ptr[(x)] && p_lookup[(x)+1] == pcopy_ptr[(x)+1] && p_lookup[(x)+2] == pcopy_ptr[(x)+2])
 	
 
 //		printf("\t  | literal write: ");
@@ -297,8 +298,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			p_hash = &hashTable[index];
 			p_scan = *p_hash;
 
-			if(MATCH(i)) {
-				printf("match2\n");
+			if(MATCH1(i) || (pcopy_ptr!=NULL && MATCH2(i))) {
 				DEST = p_lookup + i; 
 				goto literal_gen; 
 			}
@@ -311,8 +311,11 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			p_hash = &hashTable[index];
 			p_scan = *p_hash;
 			if(l_buf2 != 0) {
+				//printf("l");
+				//printp(*l_buf2, 'r');
 				list_remove(&copy_list, *l_buf2);
 				*l_buf2 = DEST - 2;
+				//printp(*l_buf2, 'i');
 				list_insert(&copy_list, *l_buf2);
 			}
 			DEST++;
@@ -364,34 +367,34 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			p_hash = &hashTable[index];
 
 			if(l_buf1 != 0) {
-				
-				printp(*l_buf1, 'r');
+				//printf("c");	
+				//printp(*l_buf1, 'r');
 				list_remove(&copy_list, *l_buf1);
 				*l_buf1 = p_lookup - 1;
 
-				printp(*l_buf1, 'i');
+				//printp(*l_buf1, 'i');
 				list_insert(&copy_list, *l_buf1);
 				
 				l_buf1 = 0;
 
 				if(l_buf2 != 0) {
 
-					printp(*l_buf2, 'r');
+					//printp(*l_buf2, 'r');
 					list_remove(&copy_list, *l_buf2);
 					*l_buf2 = p_lookup - 2;
 
-					printp(*l_buf2, 'i');
+					//printp(*l_buf2, 'i');
 					list_insert(&copy_list, *l_buf2);
 					l_buf2 = 0;
 				}
 			}
 
-			printp(*p_hash, 'r');
+			//printf("h");
+			//printp(*p_hash, 'r');
 			list_remove(&copy_list, *p_hash);
 
 			*p_hash = p_lookup;
-			printf("p");
-			printp(*p_hash, 'i');
+			//printp(*p_hash, 'i');
 			list_insert(&copy_list, *p_hash);
 		}
 
