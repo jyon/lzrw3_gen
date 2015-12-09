@@ -5,6 +5,8 @@
 #define UWORD unsigned int
 #define HASH_TABLE_LENGTH 4096
 
+#define ABS(x) ((x)>0)? x:(-x)
+
 UBYTE* hashTable[HASH_TABLE_LENGTH];
 
 void main(int argc, char *argv[])
@@ -40,7 +42,7 @@ void main(int argc, char *argv[])
 		if(argv[2][0] != '-' || argv[2][1] != 'c') {
 			printf("%s", error_string);
 			return;
-		} else if((comp = atoi(argv[3] + 1)) < 0 || comp > 85) {
+		} else if((comp = atoi(argv[3])) < 0 || comp > 85) {
 			printf("%s", error_string);
 			return;
 		}
@@ -65,17 +67,22 @@ void main(int argc, char *argv[])
 			lzrw3_gen(comp, x, a, hashTable);
 			size = blueftl_lzrw3_compress(a, x, b, hashTable);
 
-			printf("(result: %d / %d = %f)", (x - size), x , (double) (x- size) / x);
-			printf("(expect: %d / %d = %f)\n", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
+			int c = (x - size);
+			printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
+			printf("expect: %5d / %5d = %3.3f\t", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
+			int error = (x - x * (100-comp)/100) - (x - size);
+			printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 			
 		}
 	} else {
 		comp = atoi(argv[3]);
 		lzrw3_gen(comp, x, a, hashTable);
 		size = blueftl_lzrw3_compress(a, x, b, hashTable);
-
-		printf("(result: %d / %d = %f)", (x - size), x , (double) (x- size) / x);
-		printf("(expect: %d / %d = %f)\n", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
+		int c = (x - size);
+		printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
+		printf("expect: %5d / %5d = %3.3f\t", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
+		int error = (x - x * (100-comp)/100) - (x - size);
+		printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 	}
 	return;
 }
