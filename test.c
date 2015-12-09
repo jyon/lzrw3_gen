@@ -20,7 +20,7 @@ void main(int argc, char *argv[])
 	int all = 0;
 	int i = 0, j;
 	int k;
-	char* error_string = "usage: test data_size [-a] [-c comp]\n\t-a: test for all comp (0 ~ 85)\n\t-c comp: test for comp (0 ~ 85)\n";
+	char* error_string = "usage: test data_size [-a] [-c comp]\n\t-a: test for all comp (12 ~ 100)\n\t-c comp: test for comp (12 ~ 100)\n";
 
 
 	if(argc==1) {
@@ -42,7 +42,7 @@ void main(int argc, char *argv[])
 		if(argv[2][0] != '-' || argv[2][1] != 'c') {
 			printf("%s", error_string);
 			return;
-		} else if((comp = atoi(argv[3])) < 0 || comp > 85) {
+		} else if((comp = atoi(argv[3])) < 12 || comp > 100) {
 			printf("%s", error_string);
 			return;
 		}
@@ -57,20 +57,16 @@ void main(int argc, char *argv[])
 	x = k * KB;	
 	if(all) {
 		printf("data size = %d\n", x);
-		for(comp = 0; comp < 86; comp++) {
+		for(comp = 100; comp > 11; comp--) {
 
-			for(i = 0; i < 16*KB; i++) {
-				a[i] = 0;
-				b[i] = 0; 
-			}
 
 			lzrw3_gen(comp, x, a, hashTable);
 			size = blueftl_lzrw3_compress(a, x, b, hashTable);
 
-			int c = (x - size);
+			int c = size;
 			printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
-			printf("expect: %5d / %5d = %3.3f\t", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
-			int error = (x - x * (100-comp)/100) - (x - size);
+			printf("expect: %5d / %5d = %3.3f\t", x * comp / 100, x, (double) (x* comp / 100) / x);
+			int error = (x * comp/100) - c;
 			printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 			
 		}
@@ -78,10 +74,10 @@ void main(int argc, char *argv[])
 		comp = atoi(argv[3]);
 		lzrw3_gen(comp, x, a, hashTable);
 		size = blueftl_lzrw3_compress(a, x, b, hashTable);
-		int c = (x - size);
+		int c = size;
 		printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
-		printf("expect: %5d / %5d = %3.3f\t", x - x * (100 - comp) / 100, x, (double) (x- x* (100 - comp) / 100) / x);
-		int error = (x - x * (100-comp)/100) - (x - size);
+		printf("expect: %5d / %5d = %3.3f\t", x * comp / 100, x, (double) (x* comp / 100) / x);
+		int error = (x * comp/100) - c;
 		printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 	}
 	return;
