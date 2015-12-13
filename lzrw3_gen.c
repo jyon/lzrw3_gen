@@ -7,7 +7,7 @@
 
 UBYTE* hashTable[HASH_TABLE_LENGTH];
 
-GROUP mk_group(UWORD wr, UWORD cr, int literal_min)
+GROUP mk_group(int wr, int cr, int literal_min)
 {
 	const UBYTE l = 2 * (ITEMS_PER_GROUP + 1);
 	UBYTE i, j, k;
@@ -28,6 +28,7 @@ GROUP mk_group(UWORD wr, UWORD cr, int literal_min)
 	}
 	
 	qsort(group_info, l, sizeof(GROUP_INFO), compare);	
+	
 
 	for(i = 0; i < l; i++)
 	{
@@ -75,10 +76,11 @@ GROUP mk_group(UWORD wr, UWORD cr, int literal_min)
 	
 	return group;
 }
-void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTable) 
+void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable) 
 {
-	UWORD comp_size = size * (100 - compressibility) / 100;
-	UWORD comp_rest = size - comp_size;
+	UWORD comp_size = size * compressibility / 1000;
+	int comp_rest = size - comp_size;
+	printf("comp_rest=%d\n", comp_rest);
 	UWORD write_rest = size;
 	
 	UBYTE* DEST = output;
@@ -107,7 +109,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 	list copy_list_;
 
 
-	srand(time(NULL));
+//	srand(time(NULL));
 	init_hashTable(hashTable);
 	init_list(&copy_list);
 	
@@ -124,7 +126,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		UWORD index;
 		UBYTE** p_hash;
 		UBYTE literal_size;
-		UBYTE* copy_ptr;
+		UBYTE* copy_ptr = NULL;
 
 		lzrw3_gen_start:
 
@@ -185,7 +187,7 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			p_hash = &hashTable[index];
 			p_scan = *p_hash;
 
-			if(MATCH(i) || copy_ptr != NULL && index == HASH(copy_ptr)) {
+			if(MATCH(i) || pcopy_ptr != NULL && index == HASH(pcopy_ptr) || copy_ptr != NULL && index == HASH(copy_ptr)) {
 				DEST = p_lookup + i; 
 				goto literal_gen; 
 			}
@@ -201,7 +203,6 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 			if(l_buf2 != 0) {
 				list_remove(&copy_list, *l_buf2);
 				*l_buf2 = DEST - 2;
-				//printp(*l_buf2, 'i');
 
 				list_insert(&copy_list, *l_buf2);
 			}
@@ -230,13 +231,8 @@ void lzrw3_gen(UBYTE compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 			if(i > group.literal_size || copy_ptr == NULL) {
 				copy_ptr = list_get_item(&copy_list, pcopy_ptr);
-				if(copy_ptr==NULL) {
-				}
 
-
-				if(pcopy_ptr==NULL) {
-				}
-				while(*(pcopy_ptr + pcopy_size) == *copy_ptr) {
+				while(pcopy_size < 18 && *(pcopy_ptr + pcopy_size) == *copy_ptr) {
 					
 					if(copy_ptr == copy_list.tail->ptr) {
 						DEST = DEST_;
