@@ -126,6 +126,7 @@ void list_remove(list* lp, UBYTE* item) {
 	pcurr->next = ncurr;
 	if(ncurr!= NULL) ncurr->prev = pcurr;
 
+	free(curr);
 	(lp->cnt)--;
 }
 
@@ -139,6 +140,7 @@ UBYTE* list_get_item(list* lp, UBYTE* min) {
 
 	for(; curr->ptr <= min; curr = curr->next) {
 		if(curr==NULL) {
+			printf("ansldflaksdfj\n");
 			return NULL;
 		}
 	}
@@ -186,5 +188,5 @@ void list_print(list* lp) {
 
 extern UBYTE* hashTable[HASH_TABLE_LENGTH];
 void init_hashTable(UBYTE** hashTable);
-//void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
-void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable, int p);
+void lzrw3_gen(UWORD comp_ratio, UWORD size, UBYTE* output, UBYTE** hashTable);
+//void lzrw3_gen(UWORD comp_ratio, UWORD size, UBYTE* output, UBYTE** hashTable, int p);

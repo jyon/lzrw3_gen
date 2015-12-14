@@ -58,7 +58,7 @@ void main(int argc, char *argv[])
 	x = k * KB;	
 	if(all) {
 		printf("data size = %d\n", x);
-		for(comp = 1125; comp >= 120; comp--) {
+		for(comp = 120; comp <= 1125; comp++) {
 
 
 			lzrw3_gen(comp, x, a, hashTable, print);
@@ -66,11 +66,10 @@ void main(int argc, char *argv[])
 
 			int c = size;
 			printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
-			printf("expect: %5d / %5d = %3.3f\t", x * comp / 1000, x, (double) (x* comp / 1000) / x);
+			printf("expect: %5d / %5d = %3.3f\t", x*comp/1000, x , (double) (x*comp/1000) /x );
 			int error = (x * comp/1000) - c;
 			printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 			
-			fflush(stdout);
 		}
 	} else {
 		comp = atoi(argv[3]);
@@ -78,7 +77,7 @@ void main(int argc, char *argv[])
 		size = blueftl_lzrw3_compress(a, x, b, hashTable);
 		int c = size;
 		printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
-		printf("expect: %5d / %5d = %3.3f\t", x * comp / 1000, x, (double) (x* comp / 1000) / x);
+		printf("expect: %5d / %5d = %3.3f\t", x*comp/1000, x , (double) (x*comp/1000) /x );
 		int error = (x * comp/1000) - c;
 		printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 	}
