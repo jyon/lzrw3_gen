@@ -186,4 +186,5 @@ void list_print(list* lp) {
 
 extern UBYTE* hashTable[HASH_TABLE_LENGTH];
 void init_hashTable(UBYTE** hashTable);
-void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
+//void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable);
+void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable, int p);

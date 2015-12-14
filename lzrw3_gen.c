@@ -25,6 +25,14 @@ GROUP mk_group(int wr, int cr, int literal_min)
 		group_info[i].score = (group_info[i].copy_size == wr - group_info[i].literal_size)? (group_info[i].literal_size*cr + (34 - 2*group_info[i].literal_size)*wr) - (wr - cr)*wr : 
 								   			 	(group_info[i].literal_size*cr + (34 - 2*group_info[i].literal_size)*wr)%  (wr - cr);
 		group_info[i+1].score = (group_info[i].copy_size == wr - group_info[i].literal_size)? INT_MAX : (wr - cr) - group_info[i].score;
+
+		if(group_info[i].copy_size > MAX_RAW_ITEM * (ITEMS_PER_GROUP - group_info[i].literal_size)) {
+			group_info[i].copy_size = MAX_RAW_ITEM * (ITEMS_PER_GROUP - group_info[i].literal_size);
+			group_info[i+1].copy_size = INT_MAX;
+			group_info[i].score = (group_info[i].literal_size*cr + (34 - 2*group_info[i].literal_size)*wr - (wr - cr) * group_info[i].copy_size);
+			group_info[i+1].score = INT_MAX;
+		}
+						
 	}
 	
 	qsort(group_info, l, sizeof(GROUP_INFO), compare);	
@@ -43,8 +51,9 @@ GROUP mk_group(int wr, int cr, int literal_min)
 		}
 	}
 	
-	if(i == l) {
+	if(group_info[i].literal_size == ITEMS_PER_GROUP) {
 		group.literal_size = 16;
+		//printf("%d %d %d\n", wr,  cr, group.literal_size);
 		group.copy_size = 0;
 		group.comp = 0;	
 		for(i = 0; i < ITEMS_PER_GROUP; i++) {
@@ -76,12 +85,13 @@ GROUP mk_group(int wr, int cr, int literal_min)
 	
 	return group;
 }
+//void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable, int p) 
 void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTable) 
 {
 	UWORD comp_size = size * compressibility / 1000;
 	int comp_rest = size - comp_size;
-	printf("comp_rest=%d\n", comp_rest);
-	UWORD write_rest = size;
+	int write_rest = size;
+	//printf("cr=%d wr=%d\n", comp_rest, write_rest);
 	
 	UBYTE* DEST = output;
 	UBYTE* DEST_POST = output + size;
@@ -129,6 +139,8 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		UBYTE* copy_ptr = NULL;
 
 		lzrw3_gen_start:
+		//printf("iter: %d wr: %d cr: %d\n", iter, write_rest, comp_rest);
+		//fflush(stdout);
 
 		copy_ptr = NULL;
 		DEST_ = DEST;
@@ -147,11 +159,13 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		if(DEST == output || list_empty) {
 			group = mk_group(write_rest, comp_rest, 16);
 		} else if (DEST <  DEST_MAX1) { 
+		//	printf("cr=%d wr=%d\n", comp_rest, write_rest);
 			group = mk_group(write_rest, comp_rest, -1);
 		} else {
 			return;
 		}
 
+		//printf("%d %d %d\n", write_rest, comp_rest, group.literal_size);
 		
 
 		//literal generate
@@ -219,14 +233,16 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 		
 		write_rest -= literal_size;
 
+		copy_gen:
+
 		if(DEST > DEST_MAX1) {
 			return;
 		}
 
-
 		//copy generate
 		for(i = group.literal_size; i < ITEMS_PER_GROUP; i++)
 		{
+
 			p_lookup = DEST;
 
 			if(i > group.literal_size || copy_ptr == NULL) {
@@ -235,6 +251,13 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 				while(pcopy_size < 18 && *(pcopy_ptr + pcopy_size) == *copy_ptr) {
 					
 					if(copy_ptr == copy_list.tail->ptr) {
+
+						fflush(stdout);
+						if(copy_list.cnt != 1) {
+							copy_ptr = copy_list.head->ptr;
+							goto copy_select;
+						}
+
 						DEST = DEST_;
 						write_rest = write_rest_;
 						comp_rest = comp_rest_;
@@ -247,20 +270,16 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 						goto lzrw3_gen_start;
 					}
 
-
+					copy_select:
 					copy_ptr = list_get_item(&copy_list, copy_ptr);
 
 				}
 				
-				
-				pcopy_ptr = copy_ptr;
-				pcopy_size = group.item_size[i];
-			} else if (i == group.literal_size && pcopy_ptr != NULL) {
+			} /*else if (i == group.literal_size && pcopy_ptr != NULL) {
 
-				
-				pcopy_ptr = copy_ptr;
-				pcopy_size = group.item_size[i];
-			}
+			}*/
+			pcopy_ptr = copy_ptr;
+			pcopy_size = group.item_size[i];
 				
 
 			for(j = 0; j < group.item_size[i]; j++) {
@@ -295,7 +314,25 @@ void lzrw3_gen(UWORD compressibility, UWORD size, UBYTE* output, UBYTE** hashTab
 
 		write_rest -= group.copy_size;
 		comp_rest -= group.comp;
-		
+
+		/*
+		if (p) {
+			int i, j;
+			printf("{");
+			for(j = 0; j < group.literal_size; j++) {
+				printf("%d ", *(DEST_++));
+			}
+			for(i = group.literal_size; i < 16; i++) {
+				printf("(");
+				for(j = 0; j < group.item_size[i]; j++) {
+					printf("%d ", *(DEST_++));
+				}
+				printf(")");
+			}
+			printf("}");
+			printf("\n");
+		}
+		*/
 
 	}
 }

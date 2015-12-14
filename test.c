@@ -18,6 +18,7 @@ void main(int argc, char *argv[])
 	UWORD x;
 	int comp;
 	int all = 0;
+	int print = 0;
 	int i = 0, j;
 	int k;
 	char* error_string = "usage: test data_size [-a] [-c comp]\n\t-a: test for all comp (120 ~ 1125)\n\t-c comp: test for comp (120 ~ 1125)\n";
@@ -47,9 +48,9 @@ void main(int argc, char *argv[])
 			return;
 		}
 	} else {
-		printf("%s", error_string);
-		return;
+		print = 1;
 	}
+
 
 
 	k = atoi(argv[1]);
@@ -57,10 +58,10 @@ void main(int argc, char *argv[])
 	x = k * KB;	
 	if(all) {
 		printf("data size = %d\n", x);
-		for(comp = 1056; comp >= 143; comp--) {
+		for(comp = 1125; comp >= 120; comp--) {
 
 
-			lzrw3_gen(comp, x, a, hashTable);
+			lzrw3_gen(comp, x, a, hashTable, print);
 			size = blueftl_lzrw3_compress(a, x, b, hashTable);
 
 			int c = size;
@@ -69,10 +70,11 @@ void main(int argc, char *argv[])
 			int error = (x * comp/1000) - c;
 			printf("error: %5d\terror rate: %3.3f\n", error, (double) error / x);
 			
+			fflush(stdout);
 		}
 	} else {
 		comp = atoi(argv[3]);
-		lzrw3_gen(comp, x, a, hashTable);
+		lzrw3_gen(comp, x, a, hashTable, print);
 		size = blueftl_lzrw3_compress(a, x, b, hashTable);
 		int c = size;
 		printf("result: %5d / %5d = %3.3f\t", c, x , (double) c / x);
